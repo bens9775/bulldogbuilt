@@ -1,15 +1,7 @@
 # Bulldog Built Calculator
 
-A standalone, responsive Bulldog Built score calculator for GitHub Pages. The app is contained in `index.html`; it uses plain HTML, CSS, and JavaScript with no build step, dependencies, server, or database.
+A standalone, responsive Bulldog Built score calculator for GitHub Pages.
 
-## Publish with GitHub Pages
-
-1. Download `index.html` and add it to the **root** of your GitHub repository (the same level as the repository's README, if present).
-2. Commit the file to your default branch (usually `main`).
-3. In the repository, open **Settings → Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Select your default branch and the `/(root)` folder, then click **Save**.
-6. After GitHub finishes deploying, the Pages URL will appear on that settings page.
 
 ## Notes
 
