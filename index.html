@@ -3,32 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#172c24">
+  <meta name="theme-color" content="#990026">
   <meta name="description" content="Calculate and track your Bulldog Built performance across 14 fitness tests.">
   <title>Bulldog Built Calculator</title>
   <style>
     :root {
-      --ink: #17251f;
-      --muted: #65736c;
-      --paper: #f5f7f4;
+      --ink: #24191d;
+      --muted: #766c6e;
+      --paper: #f3f0eb;
       --card: #ffffff;
-      --line: #dce4dd;
-      --green: #1f513b;
-      --green-dark: #173d2d;
+      --line: #e3dce0;
+      --green: #990026;
+      --green-dark: #70001c;
       --bronze: #b87943;
       --silver: #9ba5ad;
       --gold: #e2b83e;
-      --unrated: #e9eeea;
-      --shadow: 0 8px 26px rgba(23, 37, 31, .07);
+      --unrated: #ece7e9;
+      --shadow: 0 8px 26px rgba(45, 20, 29, .07);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--paper); color: var(--ink); line-height: 1.45; }
-    .hero { background: linear-gradient(130deg, #173d2d, #285b41); color: white; padding: 36px 20px 30px; }
+    .hero { background: linear-gradient(130deg, #70001c, #990026); color: white; padding: 36px 20px 30px; }
     .hero-inner, main { width: min(1060px, calc(100% - 32px)); margin: 0 auto; }
     .eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 800; opacity: .78; }
     h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.04; margin: 8px 0 10px; letter-spacing: -.04em; }
-    .hero p { max-width: 680px; margin: 0; color: #e1ece5; }
+    .hero p { max-width: 680px; margin: 0; color: #f8e8ed; }
     main { padding: 24px 0 56px; }
     .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 22px; margin-bottom: 18px; }
     .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
@@ -40,47 +40,57 @@
     input[type="number"], input[type="text"], select {
       width: 100%; min-height: 44px; border: 1px solid #cbd6cd; border-radius: 10px; padding: 9px 11px; background: #fff;
     }
-    input:focus, select:focus, button:focus-visible { outline: 3px solid rgba(48, 125, 83, .22); outline-offset: 1px; border-color: var(--green); }
+    input:focus, select:focus, button:focus-visible { outline: 3px solid rgba(153, 0, 38, .22); outline-offset: 1px; border-color: var(--green); }
     .unit { position: relative; }
     .unit input { padding-right: 48px; }
     .unit span { position: absolute; right: 12px; top: 11px; color: var(--muted); font-size: .85rem; pointer-events: none; }
+    .weight-control { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+    .unit-toggle { display: flex; border: 1px solid #cbd6cd; border-radius: 10px; overflow: hidden; }
+    .unit-toggle button { min-width: 42px; border: 0; background: #fff; color: var(--muted); font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+    .unit-toggle button[aria-pressed="true"] { background: var(--green); color: #fff; }
     .tests { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     .test-card { border: 1px solid var(--line); border-radius: 15px; padding: 17px; background: #fff; min-width: 0; }
     .test-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
     .category { color: var(--green); text-transform: uppercase; font-size: .68rem; letter-spacing: .12em; font-weight: 850; margin-bottom: 3px; }
     h3 { font-size: 1.02rem; margin: 0; }
     .info { flex: 0 0 auto; position: relative; }
-    .info button { border: 1px solid #cbd6cd; background: #f7faf7; color: var(--green); border-radius: 50%; width: 27px; height: 27px; font-weight: 800; cursor: help; }
-    .tooltip { display: none; position: absolute; z-index: 5; right: 0; top: 34px; width: min(290px, 75vw); padding: 12px; background: #17251f; color: white; border-radius: 10px; box-shadow: 0 8px 24px #0003; font-size: .82rem; font-weight: 450; }
+    .info button { border: 1px solid #d6cbd0; background: #faf8f5; color: var(--green); border-radius: 50%; width: 27px; height: 27px; font-weight: 800; cursor: help; }
+    .tooltip { display: none; position: absolute; z-index: 5; right: 0; top: 34px; width: min(290px, 75vw); padding: 12px; background: var(--ink); color: white; border-radius: 10px; box-shadow: 0 8px 24px #0003; font-size: .82rem; font-weight: 450; }
     .info:hover .tooltip, .info:focus-within .tooltip { display: block; }
     .field-label { font-size: .8rem; color: var(--muted); font-weight: 650; margin: 0 0 5px; }
     .thresholds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0 12px; }
-    .threshold { border-radius: 8px; padding: 7px 5px; text-align: center; font-size: .75rem; color: #263129; line-height: 1.25; }
+    .threshold { border-radius: 8px; padding: 7px 5px; text-align: center; font-size: .75rem; color: #30262a; line-height: 1.25; }
     .threshold b { display: block; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
     .threshold.bronze { background: #f2e2d4; }
     .threshold.silver { background: #e7ebee; }
     .threshold.gold { background: #f8edc8; }
+    .target-groups { display: grid; gap: 14px; }
+    .target-group h3 { color: var(--green); font-size: .92rem; margin-bottom: 5px; }
+    .target-group ul { margin: 0; padding-left: 20px; }
+    .target-group a { color: var(--green-dark); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+    .target-empty { margin: 0; color: var(--muted); }
     .manual-label { margin-top: 12px; }
     .tier-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
     .tier-btn { min-height: 34px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); font-size: .72rem; font-weight: 750; cursor: pointer; padding: 5px 2px; }
     .tier-btn[aria-pressed="true"].bronze { background: #f2e2d4; border-color: var(--bronze); color: #633b1c; }
     .tier-btn[aria-pressed="true"].silver { background: #e7ebee; border-color: var(--silver); color: #34414a; }
     .tier-btn[aria-pressed="true"].gold { background: #f8edc8; border-color: var(--gold); color: #604a0b; }
-    .tier-btn[aria-pressed="true"].none { background: #edf1ed; border-color: #9baa9e; color: var(--ink); }
-    .result-panel { background: #173d2d; color: white; border: 0; }
-    .result-panel .subtle { color: #d0e0d5; }
+    .tier-btn[aria-pressed="true"].none { background: #f3f0eb; border-color: #b7aab0; color: var(--ink); }
+    .result-panel { background: #70001c; color: white; border: 0; }
+    .result-panel .subtle { color: #f0dce2; }
+    .achievement-message { margin: 0 0 18px; border-left: 4px solid #e6b5c3; border-radius: 8px; padding: 12px 14px; background: #fff1f4; color: #70001c; font-weight: 750; }
     .score-layout { display: grid; grid-template-columns: minmax(150px, .7fr) 1.3fr; gap: 24px; align-items: center; }
     .score-number { font-size: clamp(3rem, 8vw, 4.5rem); font-weight: 850; letter-spacing: -.06em; line-height: 1; }
-    .score-number small { font-size: 1.1rem; font-weight: 600; letter-spacing: 0; color: #c7d8cd; }
-    .score-caption { color: #d0e0d5; margin-top: 8px; font-size: .9rem; }
+    .score-number small { font-size: 1.1rem; font-weight: 600; letter-spacing: 0; color: #edcbd5; }
+    .score-caption { color: #f0dce2; margin-top: 8px; font-size: .9rem; }
     .counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
     .count-pill { border: 1px solid #ffffff40; background: #ffffff12; padding: 6px 10px; border-radius: 999px; font-size: .8rem; }
     .progress-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
-    .progress-tile { min-height: 67px; border-radius: 10px; padding: 8px 5px; color: #1d2922; display: flex; flex-direction: column; justify-content: space-between; text-align: center; font-size: .7rem; font-weight: 750; overflow-wrap: anywhere; }
+    .progress-tile { min-height: 67px; border-radius: 10px; padding: 8px 5px; color: #282126; display: flex; flex-direction: column; justify-content: space-between; text-align: center; font-size: .7rem; font-weight: 750; overflow-wrap: anywhere; }
     .progress-tile.bronze { background: #d9a477; }
     .progress-tile.silver { background: #c4cdd3; }
     .progress-tile.gold { background: #f0cc58; }
-    .progress-tile.unrated { background: #e4ebe5; color: #58665d; }
+    .progress-tile.unrated { background: #f3f0eb; color: #6b6164; }
     .tile-tier { font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
     .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
     .action { border: 1px solid #ffffff70; border-radius: 9px; padding: 9px 13px; background: transparent; color: white; font: inherit; font-weight: 700; cursor: pointer; }
@@ -96,29 +106,28 @@
 <body>
   <header class="hero">
     <div class="hero-inner">
-      <div class="eyebrow">Inspired by the Union University program</div>
-      <h1>How Bulldog Built are you?</h1>
-      <p>Enter your results across 14 tests from all areas of fitness to see your score, recognize your strengths, and spot opportunities to improve.</p>
+      <!--<div class="eyebrow">Inspired by the Union University program</div>-->
+      <h1>Are you Bulldog Built?</h1>
+      <p>Score 14 tests from all areas of fitness. Recognize your strengths and weaknesses.</p>
     </div>
   </header>
   <main>
     <section class="panel profile-panel" aria-labelledby="profile-title">
-      <div class="section-heading"><h2 id="profile-title">Your information</h2><span class="subtle">Used to calculate bodyweight-based standards</span></div>
+      <div class="section-heading"><h2 id="profile-title">Your information</h2><span class="subtle">Required for calculating standards</span></div>
       <div class="profile-grid">
         <div><label for="sex">Sex</label><select id="sex"><option value="male">Male</option><option value="female">Female</option></select></div>
-        <div><label for="weight">Body weight</label><div class="unit"><input id="weight" type="number" min="1" max="1000" step="0.1" placeholder="e.g. 185" inputmode="decimal"><span>lb</span></div></div>
+        <div><label for="weight">Body weight</label><div class="weight-control"><div class="unit"><input id="weight" type="number" min="1" max="1000" step="0.1" placeholder="e.g. 185" inputmode="decimal"><span id="weight-unit">lb</span></div><div class="unit-toggle" role="group" aria-label="Body weight unit"><button type="button" class="weight-unit-btn" data-unit="lb" aria-label="Pounds" aria-pressed="true">Pounds</button><button type="button" class="weight-unit-btn" data-unit="kg" aria-label="Kilograms" aria-pressed="false">Kilograms</button></div></div></div>
       </div>
-      <p class="footnote">Several tests have seperate standareds for men and women. Barbell lift targets are based on bodyweight.</p>
     </section>
 
     <section class="panel" aria-labelledby="tests-title">
       <div class="section-heading"><h2 id="tests-title">Your test results</h2><span class="subtle">Enter a result or select a tier</span></div>
       <div id="tests" class="tests"></div>
-      <div class="notice"><strong>Scoring note:</strong> An unattempted test is left blank and does not add points. A result below Bronze earns 0 points. The total is the sum of all 14 test scores, with a maximum of 42.</div>
-    </section>
+       </section>
 
     <section class="panel result-panel" aria-labelledby="results-title">
       <div class="section-heading"><h2 id="results-title">Your Bulldog Built score</h2><span class="subtle" id="completion">0 of 14 tests scored</span></div>
+      <p class="achievement-message" id="achievement-message" aria-live="polite" hidden></p>
       <div class="score-layout">
         <div>
           <div class="score-number"><span id="total">0</span><small> / 42</small></div>
@@ -140,21 +149,25 @@
         <button class="action" id="export">Print / save as PDF</button>
         <button class="action" id="reset">Reset results</button>
       </div>
-      <p class="footnote" style="color:#d0e0d5">Saving stores your entries in this browser on this device. It does not create an online account or sync between devices.</p>
+      <p class="footnote" style="color:#f0dce2">Saving stores your entries in this browser on this device. It does not create an online account or sync between devices.</p>
     </section>
 
     <section class="panel">
       <h2>How to interpret your score</h2>
       <p class="subtle">This calculator adds the points earned across the 14 tests to track your progress. You only achieve a level (Bronze, Silver, Gold) when you meet or exceed that standard in every test.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="targets-title">
+      <h2 id="targets-title">Yours areas to target</h2>
+      <div id="targets" class="target-groups" aria-live="polite"></div>
+    </section>
   </main>
-  <footer>Bulldog Built Calculator · Based on the Bulldog Built Participant Journal from 2021–22  · Created by Ben Scott · Not affiliated with Union University</footer>
+  <footer>Created by Ben Scott · Not affiliated with Union University</footer>
 
   <script>
-    // Source: Bulldog Built Participant Journal (2021–22), page 4.
-    // Paired standards are interpreted in the journal's apparent male/female order.
     const tests = [
-      { id:'mile', category:'Endurance', name:'1-mile time trial', type:'time', direction:'lower', standard:[660,540,420], unit:'mm:ss', help:'Run one mile as quickly as you can. Enter your elapsed time as minutes:seconds (for example, 8:35). Lower times earn higher tiers.', display:v=>fmtTime(v), thresholds:['11:00','9:00','7:00'] },
-      { id:'pushups', category:'Stamina', name:'Maximum pushups', type:'number', direction:'higher', standard:{male:[20,40,60],female:[10,20,30]}, unit:'reps', help:'Enter the maximum number of pushups completed according to the program’s testing protocol. The journal lists male/female standards as 20/10, 40/20, and 60/30.', thresholds:['20 / 10','40 / 20','60 / 30'] },
+      { id:'mile', category:'Endurance', name:'1-mile time trial', type:'time', direction:'lower', standard:[660,540,420], unit:'mm:ss', help:'Run one mile as quickly as you can. Enter your elapsed time as minutes:seconds (for example, 8:35).', display:v=>fmtTime(v), thresholds:['11:00','9:00','7:00'] },
+      { id:'pushups', category:'Stamina', name:'Maximum pushups', type:'number', direction:'higher', standard:{male:[20,40,60],female:[10,20,30]}, unit:'reps', help:'Do as many pushups with good form as you can in a row. Neutral spine, only toes and hands on the ground. Touch your chest to the floor for each rep.', thresholds:['20 / 10','40 / 20','60 / 30'] },
       { id:'pullups', category:'Stamina', name:'Maximum pullups', type:'number', direction:'higher', standard:{male:[5,12,20],female:[1,5,9]}, unit:'reps', help:'Enter the maximum number of pullups completed according to the program’s testing protocol. The journal lists male/female standards as 5/1, 12/5, and 20/9.', thresholds:['5 / 1','12 / 5','20 / 9'] },
       { id:'box', category:'Stamina', name:'2-minute box jump overs', type:'number', direction:'higher', standard:[20,35,50], unit:'reps', help:'Enter the total number of box jump overs completed in two minutes. The journal gives the same standards for both sexes.', thresholds:['20','35','50'] },
       { id:'squat', category:'Strength', name:'1-rep max squat', type:'weight', direction:'higher', standard:{male:[1,1.5,2],female:[.75,1,1.25]}, unit:'lb', help:'Enter your one-repetition maximum squat in pounds. The targets are multiples of body weight. Male/female multipliers: Bronze 1.0x/0.75x, Silver 1.5x/1.0x, Gold 2.0x/1.25x.', thresholds:['1.0x / 0.75x BW','1.5x / 1.0x BW','2.0x / 1.25x BW'] },
@@ -170,11 +183,41 @@
     ];
     const state = Object.fromEntries(tests.map(t => [t.id, { value:'', manual:null, score:null }]));
     const $ = id => document.getElementById(id);
+    let weightUnit = 'lb';
     const fmtTime = seconds => `${Math.floor(seconds/60)}:${String(Math.round(seconds%60)).padStart(2,'0')}`;
+    function bodyWeightInPounds() {
+      const weight = Number($('weight').value);
+      if (!weight || weight <= 0) return null;
+      return weightUnit === 'kg' ? weight * 2.2046226218 : weight;
+    }
+    function updateWeightUnitDisplay() {
+      $('weight-unit').textContent = weightUnit;
+      $('weight').placeholder = weightUnit === 'kg' ? 'e.g. 84' : 'e.g. 185';
+      document.querySelectorAll('.weight-unit-btn').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.unit === weightUnit));
+      });
+    }
+    function setWeightUnit(nextUnit) {
+      if (nextUnit === weightUnit) return;
+      const conversion = nextUnit === 'kg' ? 1 / 2.2046226218 : 2.2046226218;
+      const bodyWeight = Number($('weight').value);
+      if (bodyWeight > 0) $('weight').value = (Math.round(bodyWeight * conversion * 10) / 10).toString();
+      tests.filter(test => test.type === 'weight').forEach(test => {
+        const input = $(`input-${test.id}`);
+        const lift = Number(input.value);
+        if (lift > 0) {
+          input.value = (Math.round(lift * conversion * 10) / 10).toString();
+          state[test.id].value = input.value;
+        }
+      });
+      weightUnit = nextUnit;
+      updateWeightUnitDisplay();
+      update();
+    }
     function standardFor(test) {
       if (test.type === 'weight') {
-        const bw = Number($('weight').value);
-        if (!bw || bw <= 0) return null;
+        const bw = bodyWeightInPounds();
+        if (bw === null) return null;
         return test.standard[$('sex').value].map(mult => mult * bw);
       }
       if (test.standard && test.standard.male) return test.standard[$('sex').value];
@@ -209,9 +252,9 @@
         return `<article class="test-card" data-test="${t.id}">
           <div class="test-top"><div><div class="category">${t.category}</div><h3>${t.name}</h3></div>
             <div class="info"><button type="button" aria-label="More information about ${t.name}">i</button><div class="tooltip" role="tooltip">${t.help}</div></div></div>
-          <div class="field-label">Your result ${t.type==='weight'?'(lb)':t.type==='time'?'(mm:ss)':t.type==='decimal'?'(seconds)':t.type==='select'?'':'('+t.unit+')'}</div>
+          <div class="field-label result-label">Your result ${t.type==='weight'?`(${weightUnit})`:t.type==='time'?'(mm:ss)':t.type==='decimal'?'(seconds)':t.type==='select'?'':'('+t.unit+')'}</div>
           ${input}
-          <div class="field-label" style="margin-top:10px">Standards: Bronze · Silver · Gold</div>
+          <div class="field-label standards-label" style="margin-top:10px"></div>
           <div class="thresholds">${['bronze','silver','gold'].map((tier,i)=>`<div class="threshold ${tier}"><b>${tier}</b><span id="threshold-${t.id}-${i}">${t.thresholds[i]}</span></div>`).join('')}</div>
           <div class="field-label manual-label">Or select a level manually</div>
           <div class="tier-buttons" role="group" aria-label="Manually set ${t.name} tier">
@@ -249,20 +292,44 @@
         if (!m || Number(m[2])>59) return NaN;
         return Number(m[1])*60 + Number(m[2]);
       }
-      return Number(raw);
+      const value = Number(raw);
+      return test.type === 'weight' && weightUnit === 'kg' ? value * 2.2046226218 : value;
     }
     function updateThresholds() {
       tests.forEach(t => {
         const vals = standardFor(t);
         if (t.type==='weight') {
-          [0,1,2].forEach(i => $( `threshold-${t.id}-${i}` ).textContent = vals ? `${vals[i].toFixed(1).replace(/\.0$/,'')} lb` : 'Enter body weight');
+          const card = document.querySelector(`[data-test="${t.id}"]`);
+          const unitName = weightUnit === 'kg' ? 'kilograms' : 'pounds';
+          card.querySelector('.result-label').textContent = `Your result (${weightUnit})`;
+          card.querySelector('.tooltip').textContent = t.help.replace(/pounds/g, unitName);
+          [0,1,2].forEach(i => {
+            const value = vals ? (weightUnit === 'kg' ? vals[i] / 2.2046226218 : vals[i]) : null;
+            const display = value == null ? 'Enter body weight' : `${(Math.round(value * 10) / 10).toString().replace(/\.0$/,'')} ${weightUnit}`;
+            $( `threshold-${t.id}-${i}` ).textContent = display;
+          });
+        } else if (t.standard && t.standard.male) {
+          [0,1,2].forEach(i => {
+            const value = t.strict ? `<${vals[i]} s` : vals[i];
+            $( `threshold-${t.id}-${i}` ).textContent = value;
+          });
         }
       });
     }
     function update() {
+      const standardsSex = $('sex').value === 'male' ? 'Men' : 'Women';
+      document.querySelectorAll('.standards-label').forEach(label => {
+        label.textContent = `Standards for ${standardsSex}:`;
+      });
       updateThresholds();
       let total=0, bronze=0, silver=0, gold=0, zero=0, scored=0;
       const tiles=[];
+      const targetGroups = [
+        { title:'Not attempted', tests:[] },
+        { title:'Improve to Bronze', tests:[] },
+        { title:'Improve to Silver', tests:[] },
+        { title:'Improve to Gold', tests:[] }
+      ];
       tests.forEach(t => {
         const s = state[t.id];
         let score = null;
@@ -275,6 +342,10 @@
         // A numeric result for a bodyweight test cannot be scored until body weight is provided.
         if (t.type==='weight' && s.manual===null && s.value!=='' && !standardFor(t)) score = null;
         s.score = score;
+        if (score === null) targetGroups[0].tests.push(t);
+        else if (score === 0) targetGroups[1].tests.push(t);
+        else if (score === 1) targetGroups[2].tests.push(t);
+        else if (score === 2) targetGroups[3].tests.push(t);
         let cls='unrated', label='Not tested', tierLabel='Not tested';
         if (score !== null) {
           scored++;
@@ -296,17 +367,30 @@
       $('bronze-count').textContent=bronze; $('silver-count').textContent=silver; $('gold-count').textContent=gold; $('zero-count').textContent=zero;
       $('completion').textContent=`${scored} of 14 tests scored`;
       $('progress').innerHTML=tiles.join('');
+      let achievement = '';
+      if (tests.every(test => state[test.id].score === 3)) achievement = 'Incredible! You met the Bulldog Built Gold standard across the board!';
+      else if (tests.every(test => state[test.id].score >= 2)) achievement = 'Excellent! You met the Bulldog Built Silver standard across the board!';
+      else if (tests.every(test => state[test.id].score >= 1)) achievement = 'Nice! You met the Bulldog Built Bronze standard across the board!';
+      $('achievement-message').textContent = achievement;
+      $('achievement-message').hidden = !achievement;
+      const visibleTargets = targetGroups.filter(group => group.tests.length).slice(0,2);
+      $('targets').innerHTML = visibleTargets.length
+        ? visibleTargets.map(group => `<div class="target-group"><h3>${group.title}</h3><ul>${group.tests.map(test => `<li><a href="#input-${test.id}">${test.name}</a></li>`).join('')}</ul></div>`).join('')
+        : '<p class="target-empty">All tests meet gold standards.</p>';
     }
     $('sex').addEventListener('change', update);
     $('weight').addEventListener('input', update);
+    document.querySelectorAll('.weight-unit-btn').forEach(button => {
+      button.addEventListener('click', () => setWeightUnit(button.dataset.unit));
+    });
     $('save').addEventListener('click', () => {
-      const payload={sex:$('sex').value,weight:$('weight').value,state};
+      const payload={sex:$('sex').value,weight:$('weight').value,weightUnit,state};
       try { localStorage.setItem('bulldogBuiltCalculator', JSON.stringify(payload)); $('save').textContent='Saved ✓'; setTimeout(()=> $('save').textContent='Save on this device',1800); }
       catch(e) { alert('Your browser did not allow local saving. You can still print or save this page as a PDF.'); }
     });
     $('reset').addEventListener('click', () => {
       if (!confirm('Clear all test results and saved information on this device?')) return;
-      localStorage.removeItem('bulldogBuiltCalculator'); $('sex').value='male'; $('weight').value='';
+      localStorage.removeItem('bulldogBuiltCalculator'); $('sex').value='male'; $('weight').value=''; weightUnit='lb'; updateWeightUnitDisplay();
       tests.forEach(t=>{state[t.id]={value:'',manual:null,score:null}; const input=$(`input-${t.id}`); if(input) input.value='';}); update();
     });
     $('export').addEventListener('click', () => window.print());
@@ -314,7 +398,7 @@
       try {
         const saved=JSON.parse(localStorage.getItem('bulldogBuiltCalculator')||'null');
         if (!saved) return;
-        $('sex').value=saved.sex||'male'; $('weight').value=saved.weight||'';
+        $('sex').value=saved.sex||'male'; $('weight').value=saved.weight||''; weightUnit=saved.weightUnit==='kg'?'kg':'lb'; updateWeightUnitDisplay();
         tests.forEach(t=>{
           if (!saved.state || !saved.state[t.id]) return;
           state[t.id]={...state[t.id],...saved.state[t.id]};
