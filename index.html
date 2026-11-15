@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172c24">
+  <meta name="description" content="Calculate and track your Bulldog Built performance across 14 fitness tests.">
+  <title>Bulldog Built Calculator</title>
+  <style>
+    :root {
+      --ink: #17251f;
+      --muted: #65736c;
+      --paper: #f5f7f4;
+      --card: #ffffff;
+      --line: #dce4dd;
+      --green: #1f513b;
+      --green-dark: #173d2d;
+      --bronze: #b87943;
+      --silver: #9ba5ad;
+      --gold: #e2b83e;
+      --unrated: #e9eeea;
+      --shadow: 0 8px 26px rgba(23, 37, 31, .07);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); line-height: 1.45; }
+    .hero { background: linear-gradient(130deg, #173d2d, #285b41); color: white; padding: 36px 20px 30px; }
+    .hero-inner, main { width: min(1060px, calc(100% - 32px)); margin: 0 auto; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 800; opacity: .78; }
+    h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.04; margin: 8px 0 10px; letter-spacing: -.04em; }
+    .hero p { max-width: 680px; margin: 0; color: #e1ece5; }
+    main { padding: 24px 0 56px; }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 22px; margin-bottom: 18px; }
+    .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+    h2 { font-size: 1.25rem; margin: 0; letter-spacing: -.02em; }
+    .subtle { color: var(--muted); font-size: .9rem; }
+    .profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 560px; }
+    label { display: block; font-weight: 700; font-size: .88rem; margin-bottom: 6px; }
+    input, select { font: inherit; color: var(--ink); }
+    input[type="number"], input[type="text"], select {
+      width: 100%; min-height: 44px; border: 1px solid #cbd6cd; border-radius: 10px; padding: 9px 11px; background: #fff;
+    }
+    input:focus, select:focus, button:focus-visible { outline: 3px solid rgba(48, 125, 83, .22); outline-offset: 1px; border-color: var(--green); }
+    .unit { position: relative; }
+    .unit input { padding-right: 48px; }
+    .unit span { position: absolute; right: 12px; top: 11px; color: var(--muted); font-size: .85rem; pointer-events: none; }
+    .tests { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .test-card { border: 1px solid var(--line); border-radius: 15px; padding: 17px; background: #fff; min-width: 0; }
+    .test-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .category { color: var(--green); text-transform: uppercase; font-size: .68rem; letter-spacing: .12em; font-weight: 850; margin-bottom: 3px; }
+    h3 { font-size: 1.02rem; margin: 0; }
+    .info { flex: 0 0 auto; position: relative; }
+    .info button { border: 1px solid #cbd6cd; background: #f7faf7; color: var(--green); border-radius: 50%; width: 27px; height: 27px; font-weight: 800; cursor: help; }
+    .tooltip { display: none; position: absolute; z-index: 5; right: 0; top: 34px; width: min(290px, 75vw); padding: 12px; background: #17251f; color: white; border-radius: 10px; box-shadow: 0 8px 24px #0003; font-size: .82rem; font-weight: 450; }
+    .info:hover .tooltip, .info:focus-within .tooltip { display: block; }
+    .field-label { font-size: .8rem; color: var(--muted); font-weight: 650; margin: 0 0 5px; }
+    .thresholds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0 12px; }
+    .threshold { border-radius: 8px; padding: 7px 5px; text-align: center; font-size: .75rem; color: #263129; line-height: 1.25; }
+    .threshold b { display: block; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+    .threshold.bronze { background: #f2e2d4; }
+    .threshold.silver { background: #e7ebee; }
+    .threshold.gold { background: #f8edc8; }
+    .manual-label { margin-top: 12px; }
+    .tier-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+    .tier-btn { min-height: 34px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); font-size: .72rem; font-weight: 750; cursor: pointer; padding: 5px 2px; }
+    .tier-btn[aria-pressed="true"].bronze { background: #f2e2d4; border-color: var(--bronze); color: #633b1c; }
+    .tier-btn[aria-pressed="true"].silver { background: #e7ebee; border-color: var(--silver); color: #34414a; }
+    .tier-btn[aria-pressed="true"].gold { background: #f8edc8; border-color: var(--gold); color: #604a0b; }
+    .tier-btn[aria-pressed="true"].none { background: #edf1ed; border-color: #9baa9e; color: var(--ink); }
+    .result-panel { background: #173d2d; color: white; border: 0; }
+    .result-panel .subtle { color: #d0e0d5; }
+    .score-layout { display: grid; grid-template-columns: minmax(150px, .7fr) 1.3fr; gap: 24px; align-items: center; }
+    .score-number { font-size: clamp(3rem, 8vw, 4.5rem); font-weight: 850; letter-spacing: -.06em; line-height: 1; }
+    .score-number small { font-size: 1.1rem; font-weight: 600; letter-spacing: 0; color: #c7d8cd; }
+    .score-caption { color: #d0e0d5; margin-top: 8px; font-size: .9rem; }
+    .counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+    .count-pill { border: 1px solid #ffffff40; background: #ffffff12; padding: 6px 10px; border-radius: 999px; font-size: .8rem; }
+    .progress-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    .progress-tile { min-height: 67px; border-radius: 10px; padding: 8px 5px; color: #1d2922; display: flex; flex-direction: column; justify-content: space-between; text-align: center; font-size: .7rem; font-weight: 750; overflow-wrap: anywhere; }
+    .progress-tile.bronze { background: #d9a477; }
+    .progress-tile.silver { background: #c4cdd3; }
+    .progress-tile.gold { background: #f0cc58; }
+    .progress-tile.unrated { background: #e4ebe5; color: #58665d; }
+    .tile-tier { font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
+    .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
+    .action { border: 1px solid #ffffff70; border-radius: 9px; padding: 9px 13px; background: transparent; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+    .action.primary { background: white; color: var(--green-dark); border-color: white; }
+    .notice { border-left: 4px solid var(--gold); background: #fff9e9; color: #5a4a1e; border-radius: 8px; padding: 12px 14px; font-size: .86rem; margin-top: 14px; }
+    .footnote { font-size: .8rem; color: var(--muted); margin: 14px 2px 0; }
+    footer { text-align: center; color: var(--muted); font-size: .78rem; padding: 0 16px 28px; }
+    @media (max-width: 760px) { .tests { grid-template-columns: 1fr; } .score-layout { grid-template-columns: 1fr; gap: 18px; } .progress-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+    @media (max-width: 420px) { .panel { padding: 16px; } .profile-grid { grid-template-columns: 1fr; } .progress-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .threshold { font-size: .69rem; } }
+    @media print { body { background: white; } .hero { padding: 18px; } main { width: 100%; } .panel { box-shadow: none; break-inside: avoid; } .actions, .profile-panel, footer { display: none; } .tests { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">Bulldog Built Initiative</div>
+      <h1>How Bulldog Built are you?</h1>
+      <p>Enter your results across the 14 tests to see your score, recognize your strengths, and spot opportunities to improve.</p>
+    </div>
+  </header>
+  <main>
+    <section class="panel profile-panel" aria-labelledby="profile-title">
+      <div class="section-heading"><h2 id="profile-title">Your information</h2><span class="subtle">Used to calculate bodyweight-based standards</span></div>
+      <div class="profile-grid">
+        <div><label for="sex">Sex standard</label><select id="sex"><option value="male">Male</option><option value="female">Female</option></select></div>
+        <div><label for="weight">Body weight</label><div class="unit"><input id="weight" type="number" min="1" max="1000" step="0.1" placeholder="e.g. 185" inputmode="decimal"><span>lb</span></div></div>
+      </div>
+      <p class="footnote">The journal presents paired standards in male/female order. Bodyweight-based lift targets are calculated in pounds.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="tests-title">
+      <div class="section-heading"><h2 id="tests-title">Your test results</h2><span class="subtle">Enter a result or select a tier</span></div>
+      <div id="tests" class="tests"></div>
+      <div class="notice"><strong>Scoring note:</strong> An unattempted test is left blank and does not add points. A result below Bronze earns 0 points. The total is the sum of all 14 test scores, with a maximum of 42.</div>
+    </section>
+
+    <section class="panel result-panel" aria-labelledby="results-title">
+      <div class="section-heading"><h2 id="results-title">Your Bulldog Built score</h2><span class="subtle" id="completion">0 of 14 tests scored</span></div>
+      <div class="score-layout">
+        <div>
+          <div class="score-number"><span id="total">0</span><small> / 42</small></div>
+          <div class="score-caption">Bronze = 1 point · Silver = 2 points · Gold = 3 points</div>
+          <div class="counts" aria-live="polite">
+            <span class="count-pill">🥉 Bronze: <b id="bronze-count">0</b></span>
+            <span class="count-pill">🥈 Silver: <b id="silver-count">0</b></span>
+            <span class="count-pill">🥇 Gold: <b id="gold-count">0</b></span>
+            <span class="count-pill">Below bronze: <b id="zero-count">0</b></span>
+          </div>
+        </div>
+        <div>
+          <div class="subtle" style="margin-bottom:9px">Your 14-test achievement map</div>
+          <div class="progress-grid" id="progress" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="action primary" id="save">Save on this device</button>
+        <button class="action" id="export">Print / save as PDF</button>
+        <button class="action" id="reset">Reset results</button>
+      </div>
+      <p class="footnote" style="color:#d0e0d5">Saving stores your entries in this browser on this device. It does not create an online account or sync between devices.</p>
+    </section>
+
+    <section class="panel">
+      <h2>How to interpret your score</h2>
+      <p class="subtle">This calculator adds the points earned across the 14 tests. It is a convenient overall progress measure, not an official membership determination. The original Bulldog Built journal describes Bronze, Silver, and Gold membership as requiring that level in every test.</p>
+      <p class="subtle">Standards shown here are transcribed from the Bulldog Built Participant Journal (2021–22). Check with the program administrator if you need an official test protocol or certification.</p>
+    </section>
+  </main>
+  <footer>Bulldog Built Calculator · Based on the Bulldog Built Participant Journal, 2021–22</footer>
+
+  <script>
+    // Source: Bulldog Built Participant Journal (2021–22), page 4.
+    // Paired standards are interpreted in the journal's apparent male/female order.
+    const tests = [
+      { id:'mile', category:'Endurance', name:'1-mile time trial', type:'time', direction:'lower', standard:[660,540,420], unit:'mm:ss', help:'Run one mile as quickly as you can. Enter your elapsed time as minutes:seconds (for example, 8:35). Lower times earn higher tiers.', display:v=>fmtTime(v), thresholds:['11:00','9:00','7:00'] },
+      { id:'pushups', category:'Stamina', name:'Maximum pushups', type:'number', direction:'higher', standard:{male:[20,40,60],female:[10,20,30]}, unit:'reps', help:'Enter the maximum number of pushups completed according to the program’s testing protocol. The journal lists male/female standards as 20/10, 40/20, and 60/30.', thresholds:['20 / 10','40 / 20','60 / 30'] },
+      { id:'pullups', category:'Stamina', name:'Maximum pullups', type:'number', direction:'higher', standard:{male:[5,12,20],female:[1,5,9]}, unit:'reps', help:'Enter the maximum number of pullups completed according to the program’s testing protocol. The journal lists male/female standards as 5/1, 12/5, and 20/9.', thresholds:['5 / 1','12 / 5','20 / 9'] },
+      { id:'box', category:'Stamina', name:'2-minute box jump overs', type:'number', direction:'higher', standard:[20,35,50], unit:'reps', help:'Enter the total number of box jump overs completed in two minutes. The journal gives the same standards for both sexes.', thresholds:['20','35','50'] },
+      { id:'squat', category:'Strength', name:'1-rep max squat', type:'weight', direction:'higher', standard:{male:[1,1.5,2],female:[.75,1,1.25]}, unit:'lb', help:'Enter your one-repetition maximum squat in pounds. The targets are multiples of body weight. Male/female multipliers: Bronze 1.0x/0.75x, Silver 1.5x/1.0x, Gold 2.0x/1.25x.', thresholds:['1.0x / 0.75x BW','1.5x / 1.0x BW','2.0x / 1.25x BW'] },
+      { id:'bench', category:'Strength', name:'1-rep max bench press', type:'weight', direction:'higher', standard:{male:[.75,1.25,1.5],female:[.5,.75,1]}, unit:'lb', help:'Enter your one-repetition maximum bench press in pounds. Male/female multipliers: Bronze 0.75x/0.5x, Silver 1.25x/0.75x, Gold 1.5x/1.0x body weight.', thresholds:['0.75x / 0.5x BW','1.25x / 0.75x BW','1.5x / 1.0x BW'] },
+      { id:'deadlift', category:'Strength', name:'1-rep max deadlift', type:'weight', direction:'higher', standard:{male:[1.5,2,2.5],female:[1,1.25,1.5]}, unit:'lb', help:'Enter your one-repetition maximum deadlift in pounds. Male/female multipliers: Bronze 1.5x/1.0x, Silver 2.0x/1.25x, Gold 2.5x/1.5x body weight.', thresholds:['1.5x / 1.0x BW','2.0x / 1.25x BW','2.5x / 1.5x BW'] },
+      { id:'bess', category:'Balance', name:'BESS', type:'number', direction:'lower', standard:[15,13,10], unit:'errors', help:'Enter your BESS score. The journal lists 15, 13, and 10 for Bronze, Silver, and Gold respectively; lower scores are treated as better. Follow the official BESS protocol when testing.', thresholds:['15','13','10'] },
+      { id:'bike', category:'Speed', name:'500m bike erg', type:'time', direction:'lower', standard:[60,50,45], unit:'mm:ss', help:'Enter the time to complete 500 meters on a bike erg, as minutes:seconds. Lower times earn higher tiers.', display:v=>fmtTime(v), thresholds:['1:00','0:50','0:45'] },
+      { id:'clean', category:'Power', name:'1-rep max power clean', type:'weight', direction:'higher', standard:{male:[.8,1.1,1.4],female:[.5,.75,1]}, unit:'lb', help:'Enter your one-repetition maximum power clean in pounds. Male/female multipliers: Bronze 0.8x/0.5x, Silver 1.1x/0.75x, Gold 1.4x/1.0x body weight.', thresholds:['0.8x / 0.5x BW','1.1x / 0.75x BW','1.4x / 1.0x BW'] },
+      { id:'shuttle', category:'Agility', name:'Shuttle run', type:'decimal', direction:'lower', standard:{male:[10,8,6],female:[11,9,7]}, strict:true, unit:'seconds', help:'Enter your shuttle-run time in seconds. The journal specifies strict cutoffs (<10/<11 seconds for Bronze, <8/<9 for Silver, <6/<7 for Gold), with male/female values in that order.', thresholds:['<10 / <11 s','<8 / <9 s','<6 / <7 s'] },
+      { id:'du', category:'Coordination', name:'Double unders', type:'number', direction:'higher', standard:[20,40,60], unit:'reps', help:'Enter the number of consecutive or scored double unders according to the program’s testing protocol. The journal lists 20, 40, and 60.', thresholds:['20','40','60'] },
+      { id:'ohs', category:'Flexibility', name:'Overhead squat (FMS)', type:'select', direction:'select', standard:null, unit:'level', help:'The journal’s flexibility row lists “Deep Squat” under Bronze, “2 FMS” under Silver, and “3 FMS” under Gold. It does not define a numerical Bronze FMS score or describe the assessment protocol.', thresholds:['Deep squat','2 FMS','3 FMS'], options:[['','Not assessed'],['0','Below deep squat'],['1','Deep squat (Bronze)'],['2','2 FMS (Silver)'],['3','3 FMS (Gold)']] },
+      { id:'throw', category:'Accuracy', name:'Tennis ball throw test', type:'number', direction:'higher', standard:[2,3,4], unit:'targets / 6', help:'Enter the number of targets hit out of six. The journal lists 2/6 for Bronze, 3/6 for Silver, and 4/6 for Gold.', thresholds:['2 / 6','3 / 6','4 / 6'], min:0, max:6 }
+    ];
+    const state = Object.fromEntries(tests.map(t => [t.id, { value:'', manual:null, score:null }]));
+    const $ = id => document.getElementById(id);
+    const fmtTime = seconds => `${Math.floor(seconds/60)}:${String(Math.round(seconds%60)).padStart(2,'0')}`;
+    function standardFor(test) {
+      if (test.type === 'weight') {
+        const bw = Number($('weight').value);
+        if (!bw || bw <= 0) return null;
+        return test.standard[$('sex').value].map(mult => mult * bw);
+      }
+      if (test.standard && test.standard.male) return test.standard[$('sex').value];
+      return test.standard;
+    }
+    function formatThreshold(test, values) {
+      if (!values) return test.type === 'weight' ? 'Enter body weight' : '—';
+      if (test.type === 'weight') return `${Math.round(values[0]*10)/10} lb`;
+      if (test.type === 'time') return fmtTime(values[0]);
+      return String(values[0]) + (test.type === 'decimal' ? ' s' : '');
+    }
+    function tierFor(test, raw) {
+      if (raw === '' || raw == null) return null;
+      const v = Number(raw);
+      if (!Number.isFinite(v)) return null;
+      const standards = standardFor(test);
+      if (!standards) return null;
+      let score = 0;
+      for (let i=0;i<3;i++) {
+        const meets = test.direction === 'lower'
+          ? (test.strict ? v < standards[i] : v <= standards[i])
+          : v >= standards[i];
+        if (meets) score = i+1;
+      }
+      return score;
+    }
+    function renderCards() {
+      $('tests').innerHTML = tests.map(t => {
+        const input = t.type === 'select'
+          ? `<select id="input-${t.id}" aria-label="${t.name}">${t.options.map(([v,label])=>`<option value="${v}">${label}</option>`).join('')}</select>`
+          : `<input id="input-${t.id}" type="${t.type==='time'?'text':'number'}" ${t.type==='time'?'inputmode="numeric" placeholder="mm:ss" pattern="[0-9]{1,2}:[0-9]{2}"':'inputmode="decimal"'} ${t.type==='number'||t.type==='decimal'||t.type==='weight'?`step="${t.type==='number'?'1':'0.1'}" min="${t.min??0}" ${t.max?`max="${t.max}"`:''}`:''} placeholder="${t.type==='time'?'e.g. 8:35':t.type==='select'?'Choose a level':'Enter result'}" aria-label="${t.name}">`;
+        return `<article class="test-card" data-test="${t.id}">
+          <div class="test-top"><div><div class="category">${t.category}</div><h3>${t.name}</h3></div>
+            <div class="info"><button type="button" aria-label="More information about ${t.name}">i</button><div class="tooltip" role="tooltip">${t.help}</div></div></div>
+          <div class="field-label">Your result ${t.type==='weight'?'(lb)':t.type==='time'?'(mm:ss)':t.type==='decimal'?'(seconds)':t.type==='select'?'':'('+t.unit+')'}</div>
+          ${input}
+          <div class="field-label" style="margin-top:10px">Standards: Bronze · Silver · Gold</div>
+          <div class="thresholds">${['bronze','silver','gold'].map((tier,i)=>`<div class="threshold ${tier}"><b>${tier}</b><span id="threshold-${t.id}-${i}">${t.thresholds[i]}</span></div>`).join('')}</div>
+          <div class="field-label manual-label">Or select a level manually</div>
+          <div class="tier-buttons" role="group" aria-label="Manually set ${t.name} tier">
+            <button class="tier-btn none" data-tier="clear" aria-pressed="false" type="button">Clear</button>
+            <button class="tier-btn bronze" data-tier="1" aria-pressed="false" type="button">Bronze</button>
+            <button class="tier-btn silver" data-tier="2" aria-pressed="false" type="button">Silver</button>
+            <button class="tier-btn gold" data-tier="3" aria-pressed="false" type="button">Gold</button>
+          </div>
+        </article>`;
+      }).join('');
+      tests.forEach(t => {
+        const input = $(`input-${t.id}`);
+        input.addEventListener('input', () => {
+          state[t.id].value = input.value;
+          state[t.id].manual = null;
+          update();
+        });
+        input.addEventListener('change', () => {
+          state[t.id].value = input.value;
+          state[t.id].manual = null;
+          update();
+        });
+        $( `tests` ).querySelector(`[data-test="${t.id}"]`).querySelectorAll('[data-tier]').forEach(btn => btn.addEventListener('click', () => {
+          state[t.id].manual = btn.dataset.tier === 'clear' ? null : Number(btn.dataset.tier);
+          if (btn.dataset.tier === 'clear') { state[t.id].value=''; input.value=''; }
+          else { state[t.id].value=''; input.value=''; }
+          update();
+        }));
+      });
+    }
+    function parseValue(test, raw) {
+      if (raw === '') return null;
+      if (test.type === 'time') {
+        const m = raw.trim().match(/^(\d{1,2}):(\d{2})$/);
+        if (!m || Number(m[2])>59) return NaN;
+        return Number(m[1])*60 + Number(m[2]);
+      }
+      return Number(raw);
+    }
+    function updateThresholds() {
+      tests.forEach(t => {
+        const vals = standardFor(t);
+        if (t.type==='weight') {
+          [0,1,2].forEach(i => $( `threshold-${t.id}-${i}` ).textContent = vals ? `${vals[i].toFixed(1).replace(/\.0$/,'')} lb` : 'Enter body weight');
+        }
+      });
+    }
+    function update() {
+      updateThresholds();
+      let total=0, bronze=0, silver=0, gold=0, zero=0, scored=0;
+      const tiles=[];
+      tests.forEach(t => {
+        const s = state[t.id];
+        let score = null;
+        if (s.manual !== null) score = s.manual;
+        else if (t.type === 'select') score = s.value === '' ? null : Number(s.value);
+        else {
+          const parsed = parseValue(t, s.value);
+          if (parsed !== null && Number.isFinite(parsed)) score = tierFor(t, parsed);
+        }
+        // A numeric result for a bodyweight test cannot be scored until body weight is provided.
+        if (t.type==='weight' && s.manual===null && s.value!=='' && !standardFor(t)) score = null;
+        s.score = score;
+        let cls='unrated', label='Not tested', tierLabel='Not tested';
+        if (score !== null) {
+          scored++;
+          total += score;
+          if (score===1) { bronze++; cls='bronze'; label='Bronze'; }
+          else if (score===2) { silver++; cls='silver'; label='Silver'; }
+          else if (score===3) { gold++; cls='gold'; label='Gold'; }
+          else { zero++; cls='unrated'; label='Below bronze'; }
+          tierLabel = label;
+        }
+        const card = document.querySelector(`[data-test="${t.id}"]`);
+        card.querySelectorAll('[data-tier]').forEach(btn => {
+          const active = (btn.dataset.tier==='clear' && score===null) || Number(btn.dataset.tier)===score && btn.dataset.tier!=='clear';
+          btn.setAttribute('aria-pressed', String(active));
+        });
+        tiles.push(`<div class="progress-tile ${cls}" title="${t.name}: ${tierLabel}"><span>${t.name.replace('1-rep max ','').replace(' trial','')}</span><span class="tile-tier">${tierLabel}</span></div>`);
+      });
+      $('total').textContent=total;
+      $('bronze-count').textContent=bronze; $('silver-count').textContent=silver; $('gold-count').textContent=gold; $('zero-count').textContent=zero;
+      $('completion').textContent=`${scored} of 14 tests scored`;
+      $('progress').innerHTML=tiles.join('');
+    }
+    $('sex').addEventListener('change', update);
+    $('weight').addEventListener('input', update);
+    $('save').addEventListener('click', () => {
+      const payload={sex:$('sex').value,weight:$('weight').value,state};
+      try { localStorage.setItem('bulldogBuiltCalculator', JSON.stringify(payload)); $('save').textContent='Saved ✓'; setTimeout(()=> $('save').textContent='Save on this device',1800); }
+      catch(e) { alert('Your browser did not allow local saving. You can still print or save this page as a PDF.'); }
+    });
+    $('reset').addEventListener('click', () => {
+      if (!confirm('Clear all test results and saved information on this device?')) return;
+      localStorage.removeItem('bulldogBuiltCalculator'); $('sex').value='male'; $('weight').value='';
+      tests.forEach(t=>{state[t.id]={value:'',manual:null,score:null}; const input=$(`input-${t.id}`); if(input) input.value='';}); update();
+    });
+    $('export').addEventListener('click', () => window.print());
+    function restore() {
+      try {
+        const saved=JSON.parse(localStorage.getItem('bulldogBuiltCalculator')||'null');
+        if (!saved) return;
+        $('sex').value=saved.sex||'male'; $('weight').value=saved.weight||'';
+        tests.forEach(t=>{
+          if (!saved.state || !saved.state[t.id]) return;
+          state[t.id]={...state[t.id],...saved.state[t.id]};
+          const input=$(`input-${t.id}`); input.value=state[t.id].value||'';
+        });
+      } catch(e) { /* Ignore invalid or unavailable saved data. */ }
+    }
+    renderCards(); restore(); update();
+  </script>
+</body>
+</html>
