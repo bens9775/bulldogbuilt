@@ -36,10 +36,13 @@
     .subtle { color: var(--muted); font-size: .9rem; }
     .profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 560px; }
     label { display: block; font-weight: 700; font-size: .88rem; margin-bottom: 6px; }
-    input, select { font: inherit; color: var(--ink); }
+    input, select, textarea { font: inherit; color: var(--ink); }
     input[type="number"], input[type="text"], select {
       width: 100%; min-height: 44px; border: 1px solid #cbd6cd; border-radius: 10px; padding: 9px 11px; background: #fff;
     }
+    input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
+    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    textarea { width: 100%; min-height: 124px; border: 1px solid #cbd6cd; border-radius: 10px; padding: 11px; background: #fff; resize: vertical; }
     input:focus, select:focus, button:focus-visible { outline: 3px solid rgba(153, 0, 38, .22); outline-offset: 1px; border-color: var(--green); }
     .unit { position: relative; }
     .unit input { padding-right: 48px; }
@@ -120,6 +123,11 @@
       </div>
     </section>
 
+    <section class="panel" aria-labelledby="import-title">
+      <div class="section-heading"><h2 id="import-title">Optional: paste your previous test results</h2></div>
+      <textarea id="previous-results" aria-label="Paste your previous test results" placeholder="Paste a summary copied from this calculator. Matching profile and test results will load automatically."></textarea>
+    </section>
+
     <section class="panel" aria-labelledby="tests-title">
       <div class="section-heading"><h2 id="tests-title">Your test results</h2><span class="subtle">Enter a result or select a tier</span></div>
       <div id="tests" class="tests"></div>
@@ -147,7 +155,9 @@
       <div class="actions">
         <button class="action primary" id="save">Save on this device</button>
         <button class="action" id="export">Print / save as PDF</button>
+        <button class="action" id="copy-results">Copy results</button>
         <button class="action" id="reset">Reset results</button>
+        <span id="copy-status" aria-live="polite"></span>
       </div>
       <p class="footnote" style="color:#f0dce2">Saving stores your entries in this browser on this device. It does not create an online account or sync between devices.</p>
     </section>
@@ -177,9 +187,9 @@
       { id:'bike', category:'Speed', name:'BikeErg 500m', type:'time', direction:'lower', standard:[60,50,45], unit:'mm:ss', help:'Enter the time to complete 500 meters on a BikeErg, as minutes:seconds. Set the damper to 5.', display:v=>fmtTime(v), thresholds:['1:00','0:50','0:45'] },
       { id:'clean', category:'Power', name:'Max power clean', type:'weight', direction:'higher', standard:{male:[.8,1.1,1.4],female:[.5,.75,1]}, unit:'lb', help:'Enter your one-rep max for the power clean.', thresholds:['0.8x / 0.5x BW','1.1x / 0.75x BW','1.4x / 1.0x BW'] },
       { id:'shuttle', category:'Agility', name:'Shuttle run', type:'decimal', direction:'lower', standard:{male:[10,8,6],female:[11,9,7]}, strict:true, unit:'seconds', help:'Enter your shuttle-run time in seconds.', thresholds:['<10 / <11 s','<8 / <9 s','<6 / <7 s'] },
-      { id:'du', category:'Coordination', name:'Double unders', type:'number', direction:'higher', standard:[20,40,60], unit:'reps', help:'Double unders are  the number of consecutive double unders according to the program’s testing protocol. The journal lists 20, 40, and 60.', thresholds:['20','40','60'] },
-      { id:'ohs', category:'Flexibility', name:'Overhead squat', type:'select', direction:'select', standard:null, unit:'level', help:'The journal’s flexibility row lists “Deep Squat” under Bronze, “2 FMS” under Silver, and “3 FMS” under Gold. It does not define a numerical Bronze FMS score or describe the assessment protocol.', thresholds:['Deep squat','2 FMS','3 FMS'], options:[['','Not assessed'],['0','Below deep squat'],['1','Deep squat (Bronze)'],['2','2 FMS (Silver)'],['3','3 FMS (Gold)']] },
-      { id:'throw', category:'Accuracy', name:'Tennis ball throw', type:'number', direction:'higher', standard:[2,3,4], unit:'targets / 6', help:'Enter the number of targets hit out of six. The journal lists 2/6 for Bronze, 3/6 for Silver, and 4/6 for Gold.', thresholds:['2 / 6','3 / 6','4 / 6'], min:0, max:6 }
+      { id:'du', category:'Coordination', name:'Double unders', type:'number', direction:'higher', standard:[20,40,60], unit:'reps', help:'Do as many double unders with a jump rope as you can in a row.', thresholds:['20','40','60'] },
+      { id:'ohs', category:'Flexibility', name:'Overhead squat', type:'select', direction:'select', standard:null, unit:'level', help:'If you can squat deeply with your feet flat and no pain, select Deep Squat. For Silver and Gold, complete the FMS and enter your score.', thresholds:['Deep squat','2 FMS','3 FMS'], options:[['','Not assessed'],['0','Below deep squat'],['1','Deep squat (Bronze)'],['2','2 FMS (Silver)'],['3','3 FMS (Gold)']] },
+      { id:'throw', category:'Accuracy', name:'Tennis ball throw', type:'number', direction:'higher', standard:[2,3,4], unit:'targets / 6', help:'Set a 1m diameter circle at eye level, stand 10m away. Throw six tennis balls at it and record the number that hit.', thresholds:['2 / 6','3 / 6','4 / 6'], min:0, max:6 }
     ];
     const state = Object.fromEntries(tests.map(t => [t.id, { value:'', manual:null, score:null }]));
     const $ = id => document.getElementById(id);
@@ -295,6 +305,93 @@
       const value = Number(raw);
       return test.type === 'weight' && weightUnit === 'kg' ? value * 2.2046226218 : value;
     }
+    function tierText(score) {
+      if (score === 3) return '🥇 Gold';
+      if (score === 2) return '🥈 Silver';
+      if (score === 1) return '🥉 Bronze';
+      if (score === 0) return 'Below Bronze';
+      return 'Not attempted';
+    }
+    function summaryResult(test) {
+      const result = state[test.id];
+      if (result.manual !== null) return 'Manual selection';
+      if (result.value === '') return 'Not attempted';
+      if (test.type === 'select') return test.options.find(([value]) => value === result.value)?.[1] || result.value;
+      if (test.type === 'weight') return `${result.value} ${weightUnit}`;
+      if (test.type === 'time') return result.value;
+      if (test.unit === 'reps') return `${result.value} reps`;
+      if (test.type === 'decimal') return `${result.value} seconds`;
+      if (test.id === 'throw') return `${result.value} targets / 6`;
+      return `${result.value} ${test.unit}`;
+    }
+    function resultsSummary() {
+      const scores = tests.map(test => state[test.id].score);
+      let level = 'Below Bronze';
+      if (scores.every(score => score === 3)) level = 'Gold';
+      else if (scores.every(score => score >= 2)) level = 'Silver';
+      else if (scores.every(score => score >= 1)) level = 'Bronze';
+      const bodyWeight = Number($('weight').value);
+      const profile = `${$('sex').value === 'male' ? 'Male' : 'Female'}, ${bodyWeight > 0 ? `${$('weight').value} ${weightUnit}` : 'body weight not entered'}`;
+      return [
+        `Bulldog Built score: ${$('total').textContent}/42`,
+        profile,
+        `Level: ${level}`,
+        ...tests.map(test => `${test.name} - ${summaryResult(test)} - ${tierText(state[test.id].score)}`)
+      ].join('\n');
+    }
+    function importResults() {
+      const lines = $('previous-results').value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      if (!lines.length) return;
+      const profileLine = lines.find(line => /^(Male|Female),/i.test(line));
+      const profileMatch = profileLine?.match(/^(Male|Female),\s*(?:(\d+(?:\.\d+)?)\s*(lb|kg)|body weight not entered)$/i);
+      if (profileMatch) {
+        $('sex').value = profileMatch[1].toLowerCase();
+        const importedUnit = profileMatch[3]?.toLowerCase();
+        if (importedUnit && importedUnit !== weightUnit) setWeightUnit(importedUnit);
+        $('weight').value = profileMatch[2] || '';
+        updateWeightUnitDisplay();
+      }
+      tests.forEach(test => {
+        const prefix = `${test.name} - `;
+        const line = lines.find(candidate => candidate.startsWith(prefix));
+        if (!line) return;
+        const tierSeparator = line.lastIndexOf(' - ');
+        if (tierSeparator < prefix.length) return;
+        const value = line.slice(prefix.length, tierSeparator).trim();
+        const status = line.slice(tierSeparator + 3).trim();
+        const input = $(`input-${test.id}`);
+        if (value === 'Not attempted') {
+          state[test.id] = { value:'', manual:null, score:null };
+          input.value = '';
+        } else if (value === 'Manual selection') {
+          const manualScore = status.includes('Gold') ? 3 : status.includes('Silver') ? 2 : status.includes('Bronze') ? 1 : status === 'Below Bronze' ? 0 : null;
+          if (manualScore === null) return;
+          state[test.id] = { value:'', manual:manualScore, score:null };
+          input.value = '';
+        } else {
+          let importedValue = value;
+          if (test.type === 'weight') {
+            const weightMatch = value.match(/^(\d+(?:\.\d+)?)\s*(lb|kg)$/i);
+            if (!weightMatch) return;
+            const number = Number(weightMatch[1]);
+            const valueUnit = weightMatch[2].toLowerCase();
+            importedValue = (valueUnit === weightUnit ? number : valueUnit === 'lb' ? number / 2.2046226218 : number * 2.2046226218).toString();
+          } else if (test.type === 'select') {
+            importedValue = test.options.find(([, label]) => label.toLowerCase() === value.toLowerCase())?.[0];
+            if (importedValue === undefined) return;
+          } else if (test.type === 'time') {
+            if (!/^\d{1,2}:\d{2}$/.test(value)) return;
+          } else {
+            const numericValue = Number.parseFloat(value);
+            if (!Number.isFinite(numericValue)) return;
+            importedValue = String(numericValue);
+          }
+          state[test.id] = { value:importedValue, manual:null, score:null };
+          input.value = importedValue;
+        }
+      });
+      update();
+    }
     function updateThresholds() {
       tests.forEach(t => {
         const vals = standardFor(t);
@@ -394,6 +491,25 @@
       tests.forEach(t=>{state[t.id]={value:'',manual:null,score:null}; const input=$(`input-${t.id}`); if(input) input.value='';}); update();
     });
     $('export').addEventListener('click', () => window.print());
+    $('copy-results').addEventListener('click', async () => {
+      const summary = resultsSummary();
+      try {
+        await navigator.clipboard.writeText(summary);
+      } catch(e) {
+        const temporaryInput = document.createElement('textarea');
+        temporaryInput.value = summary;
+        temporaryInput.style.position = 'fixed';
+        temporaryInput.style.opacity = '0';
+        document.body.appendChild(temporaryInput);
+        temporaryInput.select();
+        const copied = document.execCommand('copy');
+        temporaryInput.remove();
+        if (!copied) { $('copy-status').textContent = 'Copy failed'; return; }
+      }
+      $('copy-status').textContent = 'Copied!';
+      setTimeout(() => $('copy-status').textContent = '', 1800);
+    });
+    $('previous-results').addEventListener('input', importResults);
     function restore() {
       try {
         const saved=JSON.parse(localStorage.getItem('bulldogBuiltCalculator')||'null');
