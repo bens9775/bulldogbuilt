@@ -43,7 +43,8 @@
     input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
     input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     textarea { width: 100%; min-height: 124px; border: 1px solid #cbd6cd; border-radius: 10px; padding: 11px; background: #fff; resize: vertical; }
-    input:focus, select:focus, button:focus-visible { outline: 3px solid rgba(153, 0, 38, .22); outline-offset: 1px; border-color: var(--green); }
+    input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px solid rgba(153, 0, 38, .22); outline-offset: 1px; border-color: var(--green); }
+    input[aria-invalid="true"] { border-color: #b00020; background: #fff7f8; }
     .unit { position: relative; }
     .unit input { padding-right: 48px; }
     .unit span { position: absolute; right: 12px; top: 11px; color: var(--muted); font-size: .85rem; pointer-events: none; }
@@ -100,10 +101,29 @@
     .action.primary { background: white; color: var(--green-dark); border-color: white; }
     .notice { border-left: 4px solid var(--gold); background: #fff9e9; color: #5a4a1e; border-radius: 8px; padding: 12px 14px; font-size: .86rem; margin-top: 14px; }
     .footnote { font-size: .8rem; color: var(--muted); margin: 14px 2px 0; }
+    #print-report { display: none; }
     footer { text-align: center; color: var(--muted); font-size: .78rem; padding: 0 16px 28px; }
     @media (max-width: 760px) { .tests { grid-template-columns: 1fr; } .score-layout { grid-template-columns: 1fr; gap: 18px; } .progress-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
     @media (max-width: 420px) { .panel { padding: 16px; } .profile-grid { grid-template-columns: 1fr; } .progress-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .threshold { font-size: .69rem; } }
-    @media print { body { background: white; } .hero { padding: 18px; } main { width: 100%; } .panel { box-shadow: none; break-inside: avoid; } .actions, .profile-panel, footer { display: none; } .tests { grid-template-columns: repeat(2, 1fr); } }
+    @page { size: letter portrait; margin: .35in; }
+    @media print {
+      body { background: #fff; color: #24191d; font: 9pt/1.2 Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .hero, main, footer { display: none !important; }
+      #print-report { display: block !important; width: 100%; margin: 0; padding: 0; }
+      .print-heading { border-bottom: 2px solid #990026; margin-bottom: 8px; padding-bottom: 7px; }
+      .print-heading h1 { color: #990026; font-size: 19pt; margin: 0 0 5px; }
+      .print-profile { color: #5b5053; font-size: 9pt; margin: 0; }
+      .print-score { font-size: 12pt; font-weight: 700; margin: 0 0 3px; }
+      .print-level { font-size: 9pt; font-weight: 700; margin: 0; }
+      .print-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 7.5pt; }
+      .print-table th, .print-table td { border-bottom: 1px solid #d8cfd3; padding: 4px 5px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+      .print-table th { background: #f3f0eb; color: #70001c; font-size: 7pt; text-transform: uppercase; }
+      .print-table th:first-child { width: 20%; }
+      .print-table th:nth-child(2) { width: 22%; }
+      .print-table th:nth-child(3) { width: 15%; }
+      .print-table th:nth-child(n+4) { width: 14.33%; }
+      .print-table tr { break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
@@ -121,11 +141,6 @@
         <div><label for="sex">Sex</label><select id="sex"><option value="male">Male</option><option value="female">Female</option></select></div>
         <div><label for="weight">Body weight</label><div class="weight-control"><div class="unit"><input id="weight" type="number" min="1" max="1000" step="0.1" placeholder="e.g. 185" inputmode="decimal"><span id="weight-unit">lb</span></div><div class="unit-toggle" role="group" aria-label="Body weight unit"><button type="button" class="weight-unit-btn" data-unit="lb" aria-label="Pounds" aria-pressed="true">Pounds</button><button type="button" class="weight-unit-btn" data-unit="kg" aria-label="Kilograms" aria-pressed="false">Kilograms</button></div></div></div>
       </div>
-    </section>
-
-    <section class="panel" aria-labelledby="import-title">
-      <div class="section-heading"><h2 id="import-title">Optional: paste your previous test results</h2></div>
-      <textarea id="previous-results" aria-label="Paste your previous test results" placeholder="Paste a summary copied from this calculator. Matching profile and test results will load automatically."></textarea>
     </section>
 
     <section class="panel" aria-labelledby="tests-title">
@@ -153,9 +168,9 @@
         </div>
       </div>
       <div class="actions">
-        <button class="action primary" id="save">Save on this device</button>
+        <button class="action primary" id="copy-results">Copy results</button>
         <button class="action" id="export">Print / save as PDF</button>
-        <button class="action" id="copy-results">Copy results</button>
+        <button class="action" id="save">Save on this device</button>
         <button class="action" id="reset">Reset results</button>
         <span id="copy-status" aria-live="polite"></span>
       </div>
@@ -171,7 +186,13 @@
       <h2 id="targets-title">Yours areas to target</h2>
       <div id="targets" class="target-groups" aria-live="polite"></div>
     </section>
+
+    <section class="panel" aria-labelledby="import-title">
+      <div class="section-heading"><h2 id="import-title">Optional: paste your previous test results</h2></div>
+      <textarea id="previous-results" aria-label="Paste your previous test results" placeholder="Paste a summary copied from this calculator. Matching profile and test results will load automatically."></textarea>
+    </section>
   </main>
+  <section id="print-report" aria-label="Bulldog Built results report"></section>
   <footer>Created by Ben Scott · Not affiliated with Union University</footer>
 
   <script>
@@ -183,12 +204,12 @@
       { id:'squat', category:'Strength', name:'Max squat', type:'weight', direction:'higher', standard:{male:[1,1.5,2],female:[.75,1,1.25]}, unit:'lb', help:'Enter the heaviest back squat you can perform. The top of your thighs should be parallel to the ground at the bottom of the movement.', thresholds:['1.0x / 0.75x BW','1.5x / 1.0x BW','2.0x / 1.25x BW'] },
       { id:'bench', category:'Strength', name:'Max bench press', type:'weight', direction:'higher', standard:{male:[.75,1.25,1.5],female:[.5,.75,1]}, unit:'lb', help:'Enter the heaviest barbell bench press you can perform. The bar should touch your chest at the bottom of each rep.', thresholds:['0.75x / 0.5x BW','1.25x / 0.75x BW','1.5x / 1.0x BW'] },
       { id:'deadlift', category:'Strength', name:'Max deadlift', type:'weight', direction:'higher', standard:{male:[1.5,2,2.5],female:[1,1.25,1.5]}, unit:'lb', help:'Enter the heaviest deadlift you can perform. No hitching, no incomplete lockout.', thresholds:['1.5x / 1.0x BW','2.0x / 1.25x BW','2.5x / 1.5x BW'] },
-      { id:'bess', category:'Balance', name:'BESS', type:'number', direction:'lower', standard:[15,13,10], unit:'errors', help:'Have a friend score your Balance Error Scoring System performance and enter the number of errors.', thresholds:['15','13','10'] },
-      { id:'bike', category:'Speed', name:'BikeErg 500m', type:'time', direction:'lower', standard:[60,50,45], unit:'mm:ss', help:'Enter the time to complete 500 meters on a BikeErg, as minutes:seconds. Set the damper to 5.', display:v=>fmtTime(v), thresholds:['1:00','0:50','0:45'] },
+      { id:'bess', category:'Balance', name:'BESS', type:'number', direction:'lower', standard:[15,13,10], unit:'errors', min:0, max:60, help:'Have a friend score your Balance Error Scoring System performance and enter the number of errors.', thresholds:['15','13','10'] },
+      { id:'bike', category:'Speed', name:'BikeErg 500m', type:'decimal', direction:'lower', standard:[60,50,45], unit:'seconds', min:0, help:'Enter the time to complete 500 meters on a BikeErg, in seconds. Set the damper to 5.', thresholds:['60','50','45'] },
       { id:'clean', category:'Power', name:'Max power clean', type:'weight', direction:'higher', standard:{male:[.8,1.1,1.4],female:[.5,.75,1]}, unit:'lb', help:'Enter your one-rep max for the power clean.', thresholds:['0.8x / 0.5x BW','1.1x / 0.75x BW','1.4x / 1.0x BW'] },
       { id:'shuttle', category:'Agility', name:'Shuttle run', type:'decimal', direction:'lower', standard:{male:[10,8,6],female:[11,9,7]}, strict:true, unit:'seconds', help:'Enter your shuttle-run time in seconds.', thresholds:['<10 / <11 s','<8 / <9 s','<6 / <7 s'] },
       { id:'du', category:'Coordination', name:'Double unders', type:'number', direction:'higher', standard:[20,40,60], unit:'reps', help:'Do as many double unders with a jump rope as you can in a row.', thresholds:['20','40','60'] },
-      { id:'ohs', category:'Flexibility', name:'Overhead squat', type:'select', direction:'select', standard:null, unit:'level', help:'If you can squat deeply with your feet flat and no pain, select Deep Squat. For Silver and Gold, complete the FMS and enter your score.', thresholds:['Deep squat','2 FMS','3 FMS'], options:[['','Not assessed'],['0','Below deep squat'],['1','Deep squat (Bronze)'],['2','2 FMS (Silver)'],['3','3 FMS (Gold)']] },
+      { id:'ohs', category:'Flexibility', name:'Overhead squat', type:'select', direction:'select', standard:null, unit:'level', help:'If you can squat deeply with your feet flat and no pain, select Deep Squat. For Silver and Gold, complete the FMS and enter your score.', thresholds:['Deep squat','2 FMS','3 FMS'], options:[['','Not assessed'],['0','Below deep squat'],['1','Deep squat'],['2','2 FMS'],['3','3 FMS']] },
       { id:'throw', category:'Accuracy', name:'Tennis ball throw', type:'number', direction:'higher', standard:[2,3,4], unit:'targets / 6', help:'Set a 1m diameter circle at eye level, stand 10m away. Throw six tennis balls at it and record the number that hit.', thresholds:['2 / 6','3 / 6','4 / 6'], min:0, max:6 }
     ];
     const state = Object.fromEntries(tests.map(t => [t.id, { value:'', manual:null, score:null }]));
@@ -303,6 +324,8 @@
         return Number(m[1])*60 + Number(m[2]);
       }
       const value = Number(raw);
+      if (!Number.isFinite(value) || value < (test.min ?? 0) || (test.max != null && value > test.max)) return NaN;
+      if (test.type === 'number' && !Number.isInteger(value)) return NaN;
       return test.type === 'weight' && weightUnit === 'kg' ? value * 2.2046226218 : value;
     }
     function tierText(score) {
@@ -319,25 +342,49 @@
       if (test.type === 'select') return test.options.find(([value]) => value === result.value)?.[1] || result.value;
       if (test.type === 'weight') return `${result.value} ${weightUnit}`;
       if (test.type === 'time') return result.value;
-      if (test.unit === 'reps') return `${result.value} reps`;
+      if (test.id === 'bess') return `${result.value} ${Number(result.value) === 1 ? 'error' : 'errors'}`;
+      if (test.id === 'throw') return `${result.value} ${Number(result.value) === 1 ? 'target' : 'targets'} / 6`;
+      if (test.unit === 'reps') return `${result.value} ${Number(result.value) === 1 ? 'rep' : 'reps'}`;
       if (test.type === 'decimal') return `${result.value} seconds`;
-      if (test.id === 'throw') return `${result.value} targets / 6`;
       return `${result.value} ${test.unit}`;
     }
-    function resultsSummary() {
+    function overallLevel() {
       const scores = tests.map(test => state[test.id].score);
-      let level = 'Below Bronze';
-      if (scores.every(score => score === 3)) level = 'Gold';
-      else if (scores.every(score => score >= 2)) level = 'Silver';
-      else if (scores.every(score => score >= 1)) level = 'Bronze';
+      if (scores.every(score => score === 3)) return 'Gold';
+      if (scores.every(score => score >= 2)) return 'Silver';
+      if (scores.every(score => score >= 1)) return 'Bronze';
+      return 'Below Bronze';
+    }
+    function resultsSummary() {
       const bodyWeight = Number($('weight').value);
       const profile = `${$('sex').value === 'male' ? 'Male' : 'Female'}, ${bodyWeight > 0 ? `${$('weight').value} ${weightUnit}` : 'body weight not entered'}`;
       return [
         `Bulldog Built score: ${$('total').textContent}/42`,
         profile,
-        `Level: ${level}`,
+        `Level: ${overallLevel()}`,
         ...tests.map(test => `${test.name} - ${summaryResult(test)} - ${tierText(state[test.id].score)}`)
       ].join('\n');
+    }
+    function printStandard(test, index) {
+      const values = standardFor(test);
+      if (test.type === 'select') return test.thresholds[index];
+      if (!values) return test.type === 'weight' ? 'Enter body weight' : '—';
+      const value = values[index];
+      if (test.type === 'weight') {
+        const displayed = weightUnit === 'kg' ? value / 2.2046226218 : value;
+        return `${Number(displayed.toFixed(1))} ${weightUnit}`;
+      }
+      if (test.type === 'time') return fmtTime(value);
+      if (test.type === 'decimal') return `${test.strict ? '<' : ''}${value} s`;
+      if (test.id === 'throw') return `${value} / 6`;
+      if (test.unit === 'reps') return `${value} ${value === 1 ? 'rep' : 'reps'}`;
+      if (test.unit === 'errors') return `${value} ${value === 1 ? 'error' : 'errors'}`;
+      return `${value} ${test.unit}`;
+    }
+    function renderPrintReport() {
+      const bodyWeight = Number($('weight').value);
+      const profile = `${$('sex').value === 'male' ? 'Male' : 'Female'}, ${bodyWeight > 0 ? `${$('weight').value} ${weightUnit}` : 'body weight not entered'}`;
+      $('print-report').innerHTML = `<header class="print-heading"><h1>Bulldog Built Results</h1><p class="print-score">${$('total').textContent}/42 points</p><p class="print-level">Level: ${overallLevel()}</p><p class="print-profile">${profile}</p></header><table class="print-table"><thead><tr><th>Test</th><th>Result</th><th>Tier</th><th>Bronze</th><th>Silver</th><th>Gold</th></tr></thead><tbody>${tests.map(test => `<tr><td>${test.name}</td><td>${summaryResult(test)}</td><td>${tierText(state[test.id].score)}</td><td>${printStandard(test, 0)}</td><td>${printStandard(test, 1)}</td><td>${printStandard(test, 2)}</td></tr>`).join('')}</tbody></table>`;
     }
     function importResults() {
       const lines = $('previous-results').value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
@@ -380,12 +427,15 @@
             importedValue = test.options.find(([, label]) => label.toLowerCase() === value.toLowerCase())?.[0];
             if (importedValue === undefined) return;
           } else if (test.type === 'time') {
-            if (!/^\d{1,2}:\d{2}$/.test(value)) return;
+            if (!Number.isFinite(parseValue(test, value))) return;
           } else {
-            const numericValue = Number.parseFloat(value);
-            if (!Number.isFinite(numericValue)) return;
+            const numericMatch = value.match(/^(-?\d+(?:\.\d+)?)(?:\s+.*)?$/);
+            if (!numericMatch) return;
+            const numericValue = Number(numericMatch[1]);
+            if (!Number.isFinite(parseValue(test, String(numericValue)))) return;
             importedValue = String(numericValue);
           }
+          if (test.type === 'weight' && !Number.isFinite(parseValue(test, importedValue))) return;
           state[test.id] = { value:importedValue, manual:null, score:null };
           input.value = importedValue;
         }
@@ -454,6 +504,8 @@
           tierLabel = label;
         }
         const card = document.querySelector(`[data-test="${t.id}"]`);
+        const resultInput = card.querySelector('input');
+        if (resultInput) resultInput.setAttribute('aria-invalid', String(s.value !== '' && !Number.isFinite(parseValue(t, s.value))));
         card.querySelectorAll('[data-tier]').forEach(btn => {
           const active = (btn.dataset.tier==='clear' && score===null) || Number(btn.dataset.tier)===score && btn.dataset.tier!=='clear';
           btn.setAttribute('aria-pressed', String(active));
@@ -476,7 +528,11 @@
         : '<p class="target-empty">All tests meet gold standards.</p>';
     }
     $('sex').addEventListener('change', update);
-    $('weight').addEventListener('input', update);
+    $('weight').addEventListener('input', () => {
+      const value = Number($('weight').value);
+      $('weight').setAttribute('aria-invalid', String($('weight').value !== '' && (!Number.isFinite(value) || value < 1)));
+      update();
+    });
     document.querySelectorAll('.weight-unit-btn').forEach(button => {
       button.addEventListener('click', () => setWeightUnit(button.dataset.unit));
     });
@@ -487,10 +543,10 @@
     });
     $('reset').addEventListener('click', () => {
       if (!confirm('Clear all test results and saved information on this device?')) return;
-      localStorage.removeItem('bulldogBuiltCalculator'); $('sex').value='male'; $('weight').value=''; weightUnit='lb'; updateWeightUnitDisplay();
+      localStorage.removeItem('bulldogBuiltCalculator'); $('sex').value='male'; $('weight').value=''; $('weight').setAttribute('aria-invalid','false'); $('previous-results').value=''; weightUnit='lb'; updateWeightUnitDisplay();
       tests.forEach(t=>{state[t.id]={value:'',manual:null,score:null}; const input=$(`input-${t.id}`); if(input) input.value='';}); update();
     });
-    $('export').addEventListener('click', () => window.print());
+    $('export').addEventListener('click', () => { renderPrintReport(); window.print(); });
     $('copy-results').addEventListener('click', async () => {
       const summary = resultsSummary();
       try {
